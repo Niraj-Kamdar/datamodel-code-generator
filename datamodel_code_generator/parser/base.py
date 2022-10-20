@@ -127,13 +127,12 @@ def sort_data_models(
             ordered_models: List[Tuple[int, DataModel]] = []
             unresolved_reference_model_names = [m.path for m in unresolved_references]
             for model in unresolved_references:
-                indexes = [
+                if indexes := [
                     unresolved_reference_model_names.index(b.reference.path)
                     for b in model.base_classes
                     if b.reference
                     and b.reference.path in unresolved_reference_model_names
-                ]
-                if indexes:
+                ]:
                     ordered_models.append(
                         (
                             min(indexes),
@@ -223,9 +222,7 @@ class Child(Protocol):
 
 
 def get_most_of_parent(value: Any) -> Optional[Any]:
-    if isinstance(value, Child):
-        return get_most_of_parent(value.parent)
-    return value
+    return get_most_of_parent(value.parent) if isinstance(value, Child) else value
 
 
 def title_to_class_name(title: str) -> str:

@@ -64,7 +64,7 @@ def test_template_base():
         a: TemplateBase = A(Path(dummy_template.name))
     assert str(a.template_file_path) == dummy_template.name
     assert a._render() == 'abc'
-    assert str(a) == ''
+    assert not str(a)
 
 
 def test_data_model():

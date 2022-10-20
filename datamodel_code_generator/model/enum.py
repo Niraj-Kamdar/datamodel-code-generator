@@ -61,8 +61,7 @@ class Enum(DataModel):
         )
 
         if not base_classes and type_:
-            base_class = SUBCLASS_BASE_CLASSES.get(type_)
-            if base_class:
+            if base_class := SUBCLASS_BASE_CLASSES.get(type_):
                 self.base_classes: List[BaseClassDataType] = [
                     BaseClassDataType(type=base_class),
                     *self.base_classes,
@@ -77,10 +76,14 @@ class Enum(DataModel):
 
     def find_member(self, value: Any) -> Optional['Member']:
         repr_value = repr(value)
-        for field in self.fields:  # pragma: no cover
-            if field.default == repr_value:
-                return self.get_member(field)
-        return None  # pragma: no cover
+        return next(
+            (
+                self.get_member(field)
+                for field in self.fields
+                if field.default == repr_value
+            ),
+            None,
+        )
 
     @property
     def imports(self) -> Tuple[Import, ...]:

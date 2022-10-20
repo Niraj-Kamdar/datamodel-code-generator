@@ -106,7 +106,7 @@ class DataType(_BaseModel):
             is_optional=is_optional,
             is_dict=is_dict,
             is_list=is_list,
-            is_func=True if kwargs else False,
+            is_func=bool(kwargs),
             is_custom_type=is_custom_type,
             strict=strict,
             kwargs=kwargs,
@@ -143,8 +143,7 @@ class DataType(_BaseModel):
 
     @property
     def full_name(self) -> str:
-        module_name = self.module_name
-        if module_name:
+        if module_name := self.module_name:
             return f'{module_name}.{self.reference.short_name}'  # type: ignore
         return self.reference.short_name  # type: ignore
 
@@ -242,12 +241,7 @@ class DataType(_BaseModel):
                     f"Literal[{', '.join(repr(literal) for literal in self.literals)}]"
                 )
             else:
-                if self.reference:
-                    type_ = self.reference.short_name
-                else:
-                    # TODO support strict Any
-                    # type_ = 'Any'
-                    type_ = ''
+                type_ = self.reference.short_name if self.reference else ''
         if self.reference and self.python_version == PythonVersion.PY_36:
             type_ = f"'{type_}'"
         if self.is_list:

@@ -460,10 +460,7 @@ def test_openapi_parser_parse_alias():
     parser = OpenAPIParser(
         Path(DATA_PATH / 'alias.yaml'),
     )
-    if platform.system() == 'Windows':
-        delimiter = '\\'
-    else:
-        delimiter = '/'
+    delimiter = '\\' if platform.system() == 'Windows' else '/'
     results = {delimiter.join(p): r for p, r in parser.parse().items()}
     openapi_parser_parse_alias_dir = (
         EXPECTED_OPEN_API_PATH / 'openapi_parser_parse_alias'

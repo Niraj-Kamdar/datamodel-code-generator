@@ -386,11 +386,7 @@ def test_parse_nested_array():
     ],
 )
 def test_get_data_type(schema_type, schema_format, result_type, from_, import_):
-    if from_ and import_:
-        import_: Optional[Import] = Import(from_=from_, import_=import_)
-    else:
-        import_ = None
-
+    import_ = Import(from_=from_, import_=import_) if from_ and import_ else None
     parser = JsonSchemaParser('')
     assert (
         parser.get_data_type(

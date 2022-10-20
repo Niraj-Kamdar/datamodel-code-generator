@@ -67,10 +67,7 @@ class DataModelField(DataModelFieldBase):
     def field(self) -> Optional[str]:
         """for backwards compatibility"""
         result = str(self)
-        if result == "":
-            return None
-
-        return result
+        return result or None
 
     def self_reference(self) -> bool:
         return isinstance(self.parent, BaseModel) and self.parent.reference.path in {

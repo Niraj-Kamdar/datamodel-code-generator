@@ -2651,45 +2651,46 @@ def test_main_http_jsonschema_with_http_headers_and_ignore_tls(
                 call(
                     'https://example.com/external_files_in_directory/person.json',
                     headers=headers_requests,
-                    verify=True if not http_ignore_tls else False,
+                    verify=not http_ignore_tls,
                 ),
                 call(
                     'https://example.com/external_files_in_directory/definitions/pet.json',
                     headers=headers_requests,
-                    verify=True if not http_ignore_tls else False,
+                    verify=not http_ignore_tls,
                 ),
                 call(
                     'https://example.com/external_files_in_directory/definitions/fur.json',
                     headers=headers_requests,
-                    verify=True if not http_ignore_tls else False,
+                    verify=not http_ignore_tls,
                 ),
                 call(
                     'https://example.com/external_files_in_directory/definitions/friends.json',
                     headers=headers_requests,
-                    verify=True if not http_ignore_tls else False,
+                    verify=not http_ignore_tls,
                 ),
                 call(
                     'https://example.com/external_files_in_directory/definitions/food.json',
                     headers=headers_requests,
-                    verify=True if not http_ignore_tls else False,
+                    verify=not http_ignore_tls,
                 ),
                 call(
                     'https://example.com/external_files_in_directory/definitions/machine/robot.json',
                     headers=headers_requests,
-                    verify=True if not http_ignore_tls else False,
+                    verify=not http_ignore_tls,
                 ),
                 call(
                     'https://example.com/external_files_in_directory/definitions/drink/coffee.json',
                     headers=headers_requests,
-                    verify=True if not http_ignore_tls else False,
+                    verify=not http_ignore_tls,
                 ),
                 call(
                     'https://example.com/external_files_in_directory/definitions/drink/tea.json',
                     headers=headers_requests,
-                    verify=True if not http_ignore_tls else False,
+                    verify=not http_ignore_tls,
                 ),
             ]
         )
+
     with pytest.raises(SystemExit):
         main()
 
