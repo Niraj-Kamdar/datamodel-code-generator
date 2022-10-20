@@ -236,9 +236,7 @@ class JsonSchemaObject(BaseModel):
 
     @cached_property
     def ref_type(self) -> Optional[JSONReference]:
-        if self.ref:
-            return get_ref_type(self.ref)
-        return None  # pragma: no cover
+        return get_ref_type(self.ref) if self.ref else None
 
 
 @lru_cache()
@@ -472,11 +470,14 @@ class JsonSchemaParser(Parser):
         base_classes: List[Reference] = []
         if len(obj.allOf) == 1 and not obj.properties:
             single_obj = obj.allOf[0]
-            if single_obj.ref and single_obj.ref_type == JSONReference.LOCAL:
-                if get_model_by_path(self.raw_obj, single_obj.ref[2:].split('/')).get(
-                    'enum'
-                ):
-                    return self.get_ref_data_type(single_obj.ref)
+            if (
+                single_obj.ref
+                and single_obj.ref_type == JSONReference.LOCAL
+                and get_model_by_path(
+                    self.raw_obj, single_obj.ref[2:].split('/')
+                ).get('enum')
+            ):
+                return self.get_ref_data_type(single_obj.ref)
         for all_of_item in obj.allOf:
             if all_of_item.ref:  # $ref
                 base_classes.append(self.model_resolver.add_ref(all_of_item.ref))
@@ -548,20 +549,18 @@ class JsonSchemaParser(Parser):
                 )
                 continue
 
-            if field.is_array or (
-                self.field_constraints
-                and not (
-                    field.ref
-                    or field.anyOf
-                    or field.oneOf
-                    or field.allOf
-                    or field.is_object
-                    or field.enum
-                )
-            ):
-                constraints: Optional[Mapping[str, Any]] = field.dict()
-            else:
-                constraints = None
+            constraints = (
+                field.dict()
+                if field.is_array
+                or self.field_constraints
+                and not field.ref
+                and not field.anyOf
+                and not field.oneOf
+                and not field.allOf
+                and not field.is_object
+                and not field.enum
+                else None
+            )
 
             field_type = self.parse_item(modular_name, field, [*path, field_name])
 
@@ -703,12 +702,13 @@ class JsonSchemaParser(Parser):
                             is_dict=True,
                             dict_key=self.data_type_manager.get_data_type(
                                 Types.string,
-                                pattern=k if not self.field_constraints else None,
+                                pattern=None if self.field_constraints else k,
                             ),
                         )
                         for k, v in item.patternProperties.items()
-                    ],
+                    ]
                 )
+
             elif isinstance(item.additionalProperties, JsonSchemaObject):
                 return self.data_type(
                     data_types=[
@@ -893,12 +893,16 @@ class JsonSchemaParser(Parser):
             data_type = self.data_type_manager.get_data_type(
                 Types.any,
             )
-        if self.force_optional_for_required_fields:
-            required: bool = False
-        else:
-            required = not obj.nullable and not (
-                obj.has_default and self.apply_default_values_for_required_fields
+        required = (
+            False
+            if self.force_optional_for_required_fields
+            else not obj.nullable
+            and (
+                not obj.has_default
+                or not self.apply_default_values_for_required_fields
             )
+        )
+
         if self.use_title_as_name and obj.title:
             name = obj.title
         reference = self.model_resolver.add(path, name, loaded=True, class_name=True)
@@ -959,10 +963,7 @@ class JsonSchemaParser(Parser):
                     if isinstance(enum_part, str)
                     else enum_part
                 )
-                if obj.x_enum_varnames:
-                    field_name = obj.x_enum_varnames[i]
-                else:
-                    field_name = str(enum_part)
+                field_name = obj.x_enum_varnames[i] if obj.x_enum_varnames else str(enum_part)
             else:
                 default = enum_part
                 if obj.x_enum_varnames:
@@ -1163,7 +1164,7 @@ class JsonSchemaParser(Parser):
     def root_id_context(self, root_raw: Dict[str, Any]) -> Generator[None, None, None]:
         root_id: Optional[str] = root_raw.get('$id')
         previous_root_id: Optional[str] = self.root_id
-        self.root_id = root_id if root_id else None
+        self.root_id = root_id or None
         yield
         self.root_id = previous_root_id
 

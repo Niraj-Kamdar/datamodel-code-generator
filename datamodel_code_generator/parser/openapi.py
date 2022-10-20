@@ -239,10 +239,7 @@ class OpenAPIParser(JsonSchemaParser):
 
     def get_ref_model(self, ref: str) -> Dict[str, Any]:
         ref_file, ref_path = self.model_resolver.resolve_ref(ref).split('#', 1)
-        if ref_file:
-            ref_body = self._get_ref_body(ref_file)
-        else:  # pragma: no cover
-            ref_body = self.raw_obj
+        ref_body = self._get_ref_body(ref_file) if ref_file else self.raw_obj
         return get_model_by_path(ref_body, ref_path.split('/')[1:])
 
     def parse_parameters(self, parameters: ParameterObject, path: List[str]) -> None:
@@ -316,16 +313,13 @@ class OpenAPIParser(JsonSchemaParser):
                 content = detail.content
             for content_type, obj in content.items():
 
-                object_schema = obj.schema_
-                if not object_schema:  # pragma: no cover
-                    continue
-                if isinstance(object_schema, JsonSchemaObject):
-                    data_types[status_code][content_type] = self.parse_schema(
-                        name, object_schema, [*path, status_code, content_type]
-                    )
-                else:
-                    data_types[status_code][content_type] = self.get_ref_data_type(
-                        object_schema.ref
+                if object_schema := obj.schema_:
+                    data_types[status_code][content_type] = (
+                        self.parse_schema(
+                            name, object_schema, [*path, status_code, content_type]
+                        )
+                        if isinstance(object_schema, JsonSchemaObject)
+                        else self.get_ref_data_type(object_schema.ref)
                     )
 
         return data_types
@@ -410,10 +404,9 @@ class OpenAPIParser(JsonSchemaParser):
                         paths_parameters = parameters[:]
                         if 'parameters' in methods:
                             paths_parameters.extend(methods['parameters'])
-                        relative_path_name = path_name[1:]
-                        if relative_path_name:
+                        if relative_path_name := path_name[1:]:
                             path = [*paths_path, relative_path_name]
-                        else:  # pragma: no cover
+                        else:
                             path = get_special_path('root', paths_path)
                         for operation_name, raw_operation in methods.items():
                             if operation_name not in OPERATION_NAMES:

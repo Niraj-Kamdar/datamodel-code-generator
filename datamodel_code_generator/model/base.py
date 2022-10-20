@@ -212,8 +212,7 @@ class DataModel(TemplateBase, ABC):
                 base_class.reference.children.append(self)
 
         if extra_template_data:
-            all_model_extra_template_data = extra_template_data.get(ALL_MODEL)
-            if all_model_extra_template_data:
+            if all_model_extra_template_data := extra_template_data.get(ALL_MODEL):
                 self.extra_template_data.update(all_model_extra_template_data)
 
         self.methods: List[str] = methods or []
@@ -260,9 +259,7 @@ class DataModel(TemplateBase, ABC):
 
     @property
     def class_name(self) -> str:
-        if '.' in self.name:
-            return self.name.rsplit('.', 1)[-1]
-        return self.name
+        return self.name.rsplit('.', 1)[-1] if '.' in self.name else self.name
 
     @property
     def module_path(self) -> List[str]:
@@ -283,7 +280,7 @@ class DataModel(TemplateBase, ABC):
         return self.reference.path
 
     def render(self) -> str:
-        response = self._render(
+        return self._render(
             class_name=self.class_name,
             fields=self.fields,
             decorators=self.decorators,
@@ -292,4 +289,3 @@ class DataModel(TemplateBase, ABC):
             description=self.description,
             **self.extra_template_data,
         )
-        return response

@@ -83,9 +83,7 @@ class Reference(_BaseModel):
         """
         If original_name is empty then, `original_name` is assigned `name`
         """
-        if v:  # pragma: no cover
-            return v
-        return values.get('name', v)  # pragma: no cover
+        return v or values.get('name', v)
 
     class Config:
         arbitrary_types_allowed = True
@@ -173,7 +171,8 @@ class FieldNameResolver:
             name += '_'
         new_name = snake_to_upper_camel(name) if upper_camel else name
         while (
-            not (new_name.isidentifier() or not self._validate_field_name(new_name))
+            not new_name.isidentifier()
+            and self._validate_field_name(new_name)
             or iskeyword(new_name)
             or (excludes and new_name in excludes)
         ):
@@ -315,8 +314,6 @@ class ModelResolver:
 
     @property
     def current_root(self) -> Sequence[str]:
-        if len(self._current_root) > 1:
-            return self._current_root
         return self._current_root
 
     def set_current_root(self, current_root: Sequence[str]) -> None:
@@ -349,10 +346,7 @@ class ModelResolver:
         self.ids['/'.join(self.current_root)][id_] = self.resolve_ref(path)
 
     def resolve_ref(self, path: Union[Sequence[str], str]) -> str:
-        if isinstance(path, str):
-            joined_path = path
-        else:
-            joined_path = self.join_path(path)
+        joined_path = path if isinstance(path, str) else self.join_path(path)
         if joined_path == '#':
             return f"{'/'.join(self.current_root)}#"
         if (
@@ -424,10 +418,7 @@ class ModelResolver:
         return joined_path
 
     def add_ref(self, ref: str, resolved: bool = False) -> Reference:
-        if not resolved:
-            path = self.resolve_ref(ref)
-        else:
-            path = ref
+        path = ref if resolved else self.resolve_ref(ref)
         reference = self.references.get(path)
         if reference:
             return reference
@@ -557,6 +548,7 @@ class ModelResolver:
         reference_names = {
             r.name for r in self.references.values()
         } | self.exclude_names
+        delimiter = '' if camel else '_'
         while uniq_name in reference_names:
             if self.duplicate_name_suffix:
                 name_parts: List[Union[str, int]] = [
@@ -566,7 +558,6 @@ class ModelResolver:
                 ]
             else:
                 name_parts = [name, count]
-            delimiter = '' if camel else '_'
             uniq_name = delimiter.join(str(p) for p in name_parts if p)
             count += 1
         return uniq_name

@@ -241,8 +241,7 @@ class DataTypeManager(_DataTypeManager):
         return self.type_map[types]
 
     def get_data_decimal_type(self, types: Types, **kwargs: Any) -> DataType:
-        data_type_kwargs = transform_kwargs(kwargs, number_kwargs)
-        if data_type_kwargs:
+        if data_type_kwargs := transform_kwargs(kwargs, number_kwargs):
             return self.data_type.from_import(
                 IMPORT_CONDECIMAL,
                 kwargs={k: Decimal(v) for k, v in data_type_kwargs.items()},
@@ -267,11 +266,10 @@ class DataTypeManager(_DataTypeManager):
     def get_data_bytes_type(self, types: Types, **kwargs: Any) -> DataType:
         data_type_kwargs: Dict[str, Any] = transform_kwargs(kwargs, byes_kwargs)
         strict = StrictTypes.bytes in self.strict_types
-        if data_type_kwargs:
-            if not strict:
-                return self.data_type.from_import(
-                    IMPORT_CONBYTES, kwargs=data_type_kwargs
-                )
+        if data_type_kwargs and not strict:
+            return self.data_type.from_import(
+                IMPORT_CONBYTES, kwargs=data_type_kwargs
+            )
         # conbytes doesn't accept strict argument
         # https://github.com/samuelcolvin/pydantic/issues/2489
         #    if strict:

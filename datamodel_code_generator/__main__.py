@@ -377,11 +377,12 @@ class Config(BaseModel):
     def validate_original_field_name_delimiter(
         cls, values: Dict[str, Any]
     ) -> Dict[str, Any]:
-        if values.get('original_field_name_delimiter') is not None:
-            if not values.get('snake_case_field'):
-                raise Error(
-                    "`--original-field-name-delimiter` can not be used without `--snake-case-field`."
-                )
+        if values.get(
+            'original_field_name_delimiter'
+        ) is not None and not values.get('snake_case_field'):
+            raise Error(
+                "`--original-field-name-delimiter` can not be used without `--snake-case-field`."
+            )
         return values
 
     # Pydantic 1.5.1 doesn't support each_item=True correctly
@@ -595,7 +596,7 @@ def main(args: Optional[Sequence[str]] = None) -> Exit:
         print(f'{e} You have to set `--class-name` option', file=sys.stderr)
         return Exit.ERROR
     except Error as e:
-        print(str(e), file=sys.stderr)
+        print(e, file=sys.stderr)
         return Exit.ERROR
     except Exception:
         import traceback
